@@ -2,6 +2,7 @@ const { getSupabaseAdmin } = require("../lib/supabaseAdmin");
 const { requireSession } = require("../lib/session");
 const { verifyOwnsToken } = require("../lib/verifyOwnership");
 const { getOrCreateToken } = require("../lib/tokens");
+const { ensureImageCacheRow } = require("../lib/imageCache");
 const { UPGRADE_COSTS } = require("../lib/economy");
 const {
   TIER_LIMITS,
@@ -61,6 +62,20 @@ module.exports = async function handler(req, res) {
   const checkedInToday = token.last_checkin_at === today;
   const spunToday = token.last_spin_date === today;
 
+  // Same cache lookup the metadata API uses, so the dashboard can show
+  // the token's actual current portrait instead of just trait names.
+  const cacheRow = await ensureImageCacheRow(supabase, {
+    weapon_tier: token.weapon_tier,
+    outfit_tier: token.outfit_tier,
+    headwear_tier: token.headwear_tier,
+    companion_tier: token.companion_tier,
+  });
+  const imageUrl =
+    cacheRow && cacheRow.status === "ready" && cacheRow.image_url
+      ? cacheRow.image_url
+      : process.env.FALLBACK_IMAGE_URL ||
+        `${process.env.SITE_URL || ""}/img/tier1-default.png`;
+
   function slotInfo(slot, namesMap) {
     const currentTier = token[`${slot}_tier`];
     const maxTier = TIER_LIMITS[slot].max;
@@ -79,6 +94,7 @@ module.exports = async function handler(req, res) {
   res.status(200).json({
     tokenId,
     pointsBalance: token.points_balance,
+    imageUrl,
     checkedInToday,
     spunToday,
     slots: {
