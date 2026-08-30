@@ -15,13 +15,24 @@
 const SESSION_KEY = "living_nft_session_token";
 const WALLET_KEY = "living_nft_wallet";
 
+/// Returns the injected wallet provider, whichever one is actually
+/// present. Most wallets inject window.ethereum, but OKX Wallet only
+/// does that when the user has turned on "Set as default wallet" in
+/// its settings -- otherwise it only injects window.okxwallet. Check
+/// both so a plain OKX install (no other wallet extensions) still
+/// works without asking the user to change that setting.
+function getInjectedProvider() {
+  return window.ethereum || window.okxwallet || null;
+}
+
 async function connectAndSignIn() {
-  if (!window.ethereum) {
-    alert("You need a wallet extension like MetaMask installed to continue.");
+  const provider = getInjectedProvider();
+  if (!provider) {
+    alert("You need a wallet extension like OKX Wallet or MetaMask installed to continue.");
     return null;
   }
 
-  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+  const accounts = await provider.request({ method: "eth_requestAccounts" });
   const wallet = accounts[0];
 
   const nonceRes = await fetch(`/api/auth/nonce?wallet=${wallet}`);
@@ -31,7 +42,7 @@ async function connectAndSignIn() {
   }
   const { message } = await nonceRes.json();
 
-  const signature = await window.ethereum.request({
+  const signature = await provider.request({
     method: "personal_sign",
     params: [message, wallet],
   });
