@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anya — Dashboard</title>
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <span class="brand">Anya</span>
+    <div id="wallet-area">
+      <button id="connect-btn" class="btn btn-primary">Connect wallet</button>
+      <span id="wallet-label" class="wallet-label" hidden></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="token-picker" class="panel">
+    <label for="token-id-input">Your token ID</label>
+    <div class="row">
+      <input id="token-id-input" type="number" min="1" placeholder="e.g. 42">
+      <button id="load-token-btn" class="btn btn-secondary">Load</button>
+    </div>
+    <p class="hint">
+      Type the token ID you hold and connect your wallet to manage it.
+      (A future version of this page can list every token your wallet
+      owns automatically — see the note in README.md about wiring up
+      an NFT-indexing API for that.)
+    </p>
+  </section>
+
+  <section id="dashboard" class="panel" hidden>
+
+    <div class="balance-row">
+      <div>
+        <span class="label">Points balance</span>
+        <span id="points-balance" class="balance">—</span>
+      </div>
+      <div class="daily-actions">
+        <button id="checkin-btn" class="btn btn-primary">Daily check-in</button>
+        <button id="wheel-btn" class="btn btn-wheel">Spin the wheel</button>
+      </div>
+    </div>
+
+    <p id="status-message" class="status-message" hidden></p>
+
+    <div class="slots-grid">
+      <article class="slot-card" data-slot="weapon">
+        <h3>Weapon</h3>
+        <p class="current-name">—</p>
+        <p class="next-line">—</p>
+        <button class="btn btn-upgrade" data-slot="weapon">Upgrade</button>
+      </article>
+
+      <article class="slot-card" data-slot="outfit">
+        <h3>Outfit</h3>
+        <p class="current-name">—</p>
+        <p class="next-line">—</p>
+        <button class="btn btn-upgrade" data-slot="outfit">Upgrade</button>
+      </article>
+
+      <article class="slot-card" data-slot="headwear">
+        <h3>Headwear</h3>
+        <p class="current-name">—</p>
+        <p class="next-line">—</p>
+        <button class="btn btn-upgrade" data-slot="headwear">Upgrade</button>
+      </article>
+
+      <article class="slot-card" data-slot="companion">
+        <h3>Companion</h3>
+        <p class="current-name">—</p>
+        <p class="next-line">—</p>
+        <button class="btn btn-upgrade" data-slot="companion">Upgrade</button>
+      </article>
+    </div>
+
+  </section>
+
+</main>
+
+<script src="js/wallet-auth.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
