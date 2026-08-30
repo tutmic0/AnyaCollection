@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anya — Dashboard</title>
+<title>Anya — Shop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,11 +12,16 @@
 <body>
 
 <header class="topbar">
-  <div class="wrap topbar-inner">
+  <div class="wrap wrap-wide topbar-inner">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true">⛏</span>
       <span class="brand-name">Anya</span>
     </div>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="dashboard.html" class="nav-link is-active">Shop</a>
+      <a href="burn.html" class="nav-link">Burn</a>
+    </nav>
     <div id="wallet-area">
       <button id="connect-btn" class="btn btn-primary">Connect wallet</button>
       <span id="wallet-label" class="wallet-label" hidden></span>
@@ -24,7 +29,7 @@
   </div>
 </header>
 
-<main class="wrap">
+<main class="wrap wrap-wide">
 
   <section id="token-picker" class="panel panel-narrow">
     <p class="eyebrow">Manage your Anya</p>
@@ -34,73 +39,87 @@
       <button id="load-token-btn" class="btn btn-secondary">Load</button>
     </div>
     <p class="hint">
-      Type the token ID you hold and connect your wallet to manage it.
-      A future version of this page can list every token your wallet
-      owns automatically.
+      Connect your wallet and every Anya you hold will show up on the
+      left automatically -- click one to manage it. Points and
+      everything you buy are shared across all of them; only the look
+      you equip is set per Anya. Typing a token ID above still works
+      too, e.g. before your wallet has finished loading.
     </p>
   </section>
 
-  <section id="dashboard" class="dashboard" hidden>
+  <div class="shop-layout">
+    <aside id="nft-sidebar" class="nft-sidebar" hidden>
+      <h2>Your Anyas</h2>
+      <ul id="sidebar-list" class="sidebar-list"></ul>
+      <p id="sidebar-empty" class="sidebar-empty" hidden>
+        No Anyas found in this wallet yet.
+      </p>
+    </aside>
 
-    <div class="hero-panel panel">
-      <div class="portrait-frame">
-        <img id="token-portrait" class="portrait-img" alt="Your Anya" src="">
-        <span id="token-id-badge" class="token-id-badge"></span>
-      </div>
+    <div class="shop-main">
+      <section id="dashboard" class="dashboard" hidden>
 
-      <div class="hero-info">
-        <div class="balance-block">
-          <span class="label">Points balance</span>
-          <span id="points-balance" class="balance">—</span>
+        <div class="hero-panel panel">
+          <div class="portrait-frame">
+            <img id="token-portrait" class="portrait-img" alt="Your Anya" src="">
+            <span id="token-id-badge" class="token-id-badge"></span>
+          </div>
+
+          <div class="hero-info">
+            <div class="balance-block">
+              <span class="label">Points balance</span>
+              <span id="points-balance" class="balance">—</span>
+            </div>
+            <div class="daily-actions">
+              <button id="checkin-btn" class="btn btn-primary">Check in all Anyas</button>
+              <button id="wheel-btn" class="btn btn-wheel">Spin the wheel</button>
+            </div>
+            <p id="status-message" class="status-message" hidden></p>
+          </div>
         </div>
-        <div class="daily-actions">
-          <button id="checkin-btn" class="btn btn-primary">Daily check-in</button>
-          <button id="wheel-btn" class="btn btn-wheel">Spin the wheel</button>
+
+        <div class="slots-grid">
+          <article class="slot-card" data-slot="weapon">
+            <div class="slot-head">
+              <span class="slot-icon" aria-hidden="true">🪓</span>
+              <h3>Weapon</h3>
+            </div>
+            <ul class="item-list" data-slot="weapon"></ul>
+          </article>
+
+          <article class="slot-card" data-slot="outfit">
+            <div class="slot-head">
+              <span class="slot-icon" aria-hidden="true">🧥</span>
+              <h3>Outfit</h3>
+            </div>
+            <ul class="item-list" data-slot="outfit"></ul>
+          </article>
+
+          <article class="slot-card" data-slot="headwear">
+            <div class="slot-head">
+              <span class="slot-icon" aria-hidden="true">🎩</span>
+              <h3>Headwear</h3>
+            </div>
+            <ul class="item-list" data-slot="headwear"></ul>
+          </article>
+
+          <article class="slot-card" data-slot="companion">
+            <div class="slot-head">
+              <span class="slot-icon" aria-hidden="true">🐾</span>
+              <h3>Companion</h3>
+            </div>
+            <ul class="item-list" data-slot="companion"></ul>
+          </article>
         </div>
-        <p id="status-message" class="status-message" hidden></p>
-      </div>
+
+      </section>
     </div>
-
-    <div class="slots-grid">
-      <article class="slot-card" data-slot="weapon">
-        <span class="slot-icon" aria-hidden="true">🪓</span>
-        <h3>Weapon</h3>
-        <p class="current-name">—</p>
-        <p class="next-line">—</p>
-        <button class="btn btn-upgrade" data-slot="weapon">Upgrade</button>
-      </article>
-
-      <article class="slot-card" data-slot="outfit">
-        <span class="slot-icon" aria-hidden="true">🧥</span>
-        <h3>Outfit</h3>
-        <p class="current-name">—</p>
-        <p class="next-line">—</p>
-        <button class="btn btn-upgrade" data-slot="outfit">Upgrade</button>
-      </article>
-
-      <article class="slot-card" data-slot="headwear">
-        <span class="slot-icon" aria-hidden="true">🎩</span>
-        <h3>Headwear</h3>
-        <p class="current-name">—</p>
-        <p class="next-line">—</p>
-        <button class="btn btn-upgrade" data-slot="headwear">Upgrade</button>
-      </article>
-
-      <article class="slot-card" data-slot="companion">
-        <span class="slot-icon" aria-hidden="true">🐾</span>
-        <h3>Companion</h3>
-        <p class="current-name">—</p>
-        <p class="next-line">—</p>
-        <button class="btn btn-upgrade" data-slot="companion">Upgrade</button>
-      </article>
-    </div>
-
-  </section>
+  </div>
 
 </main>
 
 <footer class="site-footer">
-  <div class="wrap">Anya — a living collection. Your Anya levels up with you.</div>
+  <div class="wrap wrap-wide">Anya — a living collection. Your Anya levels up with you.</div>
 </footer>
 
 <script src="js/wallet-auth.js"></script>

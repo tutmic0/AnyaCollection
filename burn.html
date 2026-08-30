@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anya — Burn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap wrap-wide topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">⛏</span>
+      <span class="brand-name">Anya</span>
+    </div>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="dashboard.html" class="nav-link">Shop</a>
+      <a href="burn.html" class="nav-link is-active">Burn</a>
+    </nav>
+    <div id="wallet-area">
+      <button id="connect-btn" class="btn btn-primary">Connect wallet</button>
+      <span id="wallet-label" class="wallet-label" hidden></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="panel">
+    <p class="eyebrow">Burn for points</p>
+    <label>Trade an Anya for points</label>
+
+    <p class="burn-warning">
+      <strong>This is permanent.</strong> Burning destroys the NFT on-chain
+      forever -- it leaves your wallet and cannot be recovered, restored,
+      or un-done. In return you get a one-time points reward, added to
+      your wallet's shared balance, spendable right away in the Shop.
+    </p>
+
+    <div class="balance-block" style="margin-bottom: 20px;">
+      <span class="label">Points balance</span>
+      <span id="points-balance" class="balance">—</span>
+    </div>
+
+    <p id="status-message" class="status-message" hidden></p>
+
+    <ul id="burn-list" class="burn-list"></ul>
+    <p id="burn-empty" class="sidebar-empty" hidden>
+      Connect your wallet to see your Anyas here.
+    </p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">Anya — a living collection. Your Anya levels up with you.</div>
+</footer>
+
+<script src="js/wallet-auth.js"></script>
+<script src="js/burn.js"></script>
+</body>
+</html>
