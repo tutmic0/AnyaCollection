@@ -13,6 +13,8 @@ const el = {
   tokenIdInput: document.getElementById("token-id-input"),
   loadTokenBtn: document.getElementById("load-token-btn"),
   dashboard: document.getElementById("dashboard"),
+  portrait: document.getElementById("token-portrait"),
+  tokenIdBadge: document.getElementById("token-id-badge"),
   pointsBalance: document.getElementById("points-balance"),
   checkinBtn: document.getElementById("checkin-btn"),
   wheelBtn: document.getElementById("wheel-btn"),
@@ -57,6 +59,11 @@ async function loadTokenState(tokenId) {
 function renderState(state) {
   el.dashboard.hidden = false;
   el.pointsBalance.textContent = state.pointsBalance;
+
+  if (state.imageUrl) {
+    el.portrait.src = state.imageUrl;
+  }
+  el.tokenIdBadge.textContent = `#${state.tokenId}`;
 
   el.checkinBtn.disabled = state.checkedInToday;
   el.checkinBtn.textContent = state.checkedInToday
