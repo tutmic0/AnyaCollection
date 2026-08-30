@@ -6,12 +6,16 @@
  */
 
 let currentTokenId = null;
+let heldTokenIds = [];
 
 const el = {
   connectBtn: document.getElementById("connect-btn"),
   walletLabel: document.getElementById("wallet-label"),
   tokenIdInput: document.getElementById("token-id-input"),
   loadTokenBtn: document.getElementById("load-token-btn"),
+  sidebar: document.getElementById("nft-sidebar"),
+  sidebarList: document.getElementById("sidebar-list"),
+  sidebarEmpty: document.getElementById("sidebar-empty"),
   dashboard: document.getElementById("dashboard"),
   portrait: document.getElementById("token-portrait"),
   tokenIdBadge: document.getElementById("token-id-badge"),
@@ -42,9 +46,66 @@ async function handleConnect() {
     el.connectBtn.hidden = true;
     el.walletLabel.hidden = false;
     el.walletLabel.textContent = `${session.wallet.slice(0, 6)}…${session.wallet.slice(-4)}`;
+    await loadHoldings();
   } finally {
     el.connectBtn.disabled = false;
   }
+}
+
+/// Fetches every Anya this wallet holds (straight from the chain, see
+/// lib/holdings.js) and renders the sidebar. If nothing is loaded yet,
+/// auto-loads the first one found so connecting is a one-click path
+/// into the shop, not a second step of typing a token ID.
+async function loadHoldings() {
+  try {
+    const res = await callWithSession("/api/holdings", { method: "GET" });
+    if (!res.ok) return;
+    const body = await res.json();
+    heldTokenIds = body.tokenIds || [];
+    renderSidebar();
+
+    if (heldTokenIds.length > 0 && currentTokenId === null) {
+      currentTokenId = heldTokenIds[0];
+      el.tokenIdInput.value = currentTokenId;
+      clearStatus();
+      await refresh();
+      highlightSidebar();
+    }
+  } catch (err) {
+    // Best-effort -- typing a token ID by hand still works if this fails.
+  }
+}
+
+function renderSidebar() {
+  el.sidebar.hidden = false;
+  el.sidebarEmpty.hidden = heldTokenIds.length > 0;
+  el.sidebarList.innerHTML = "";
+
+  for (const tokenId of heldTokenIds) {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sidebar-item";
+    btn.textContent = `Anya #${tokenId}`;
+    btn.dataset.tokenId = String(tokenId);
+    btn.addEventListener("click", async () => {
+      currentTokenId = tokenId;
+      el.tokenIdInput.value = tokenId;
+      clearStatus();
+      await refresh();
+      highlightSidebar();
+    });
+    li.appendChild(btn);
+    el.sidebarList.appendChild(li);
+  }
+
+  highlightSidebar();
+}
+
+function highlightSidebar() {
+  el.sidebarList.querySelectorAll(".sidebar-item").forEach((btn) => {
+    btn.classList.toggle("is-active", Number(btn.dataset.tokenId) === currentTokenId);
+  });
 }
 
 async function loadTokenState(tokenId) {
@@ -65,31 +126,53 @@ function renderState(state) {
   }
   el.tokenIdBadge.textContent = `#${state.tokenId}`;
 
-  el.checkinBtn.disabled = state.checkedInToday;
-  el.checkinBtn.textContent = state.checkedInToday
-    ? "Checked in today"
-    : "Daily check-in";
-
   el.wheelBtn.disabled = state.spunToday;
   el.wheelBtn.textContent = state.spunToday ? "Spun today" : "Spin the wheel";
 
-  for (const [slot, info] of Object.entries(state.slots)) {
-    const card = document.querySelector(`.slot-card[data-slot="${slot}"]`);
-    if (!card) continue;
+  for (const [slot, items] of Object.entries(state.slots)) {
+    const list = document.querySelector(`.item-list[data-slot="${slot}"]`);
+    if (!list) continue;
+    list.innerHTML = "";
 
-    card.querySelector(".current-name").textContent = info.currentName;
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.className = "item-row";
+      if (item.equipped) li.classList.add("is-equipped");
 
-    const nextLine = card.querySelector(".next-line");
-    const upgradeBtn = card.querySelector(".btn-upgrade");
+      const name = document.createElement("span");
+      name.className = "item-name";
+      name.textContent = item.name;
+      li.appendChild(name);
 
-    if (info.maxed) {
-      nextLine.textContent = "Max tier reached";
-      upgradeBtn.disabled = true;
-      upgradeBtn.textContent = "Maxed out";
-    } else {
-      nextLine.textContent = `Next: ${info.nextName} — ${info.cost} pts`;
-      upgradeBtn.disabled = state.pointsBalance < info.cost;
-      upgradeBtn.textContent = `Upgrade (${info.cost} pts)`;
+      if (item.equipped) {
+        const badge = document.createElement("span");
+        badge.className = "item-badge";
+        badge.textContent = "Equipped";
+        li.appendChild(badge);
+      } else if (item.equippedOnTokenId) {
+        // Owned, but currently worn by a different Anya in this wallet
+        // -- see api/shop/equip.js's exclusivity rule. Free it up by
+        // equipping something else on that other Anya first.
+        const badge = document.createElement("span");
+        badge.className = "item-badge item-badge-elsewhere";
+        badge.textContent = `On Anya #${item.equippedOnTokenId}`;
+        li.appendChild(badge);
+      } else if (item.owned) {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-item btn-equip";
+        btn.textContent = "Equip";
+        btn.addEventListener("click", () => handleEquip(slot, item.tier));
+        li.appendChild(btn);
+      } else {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-item btn-buy";
+        btn.textContent = `Buy — ${item.price} pts`;
+        btn.disabled = state.pointsBalance < item.price;
+        btn.addEventListener("click", () => handleBuy(slot, item.tier));
+        li.appendChild(btn);
+      }
+
+      list.appendChild(li);
     }
   }
 }
@@ -117,21 +200,31 @@ async function handleLoadToken() {
   currentTokenId = tokenId;
   clearStatus();
   await refresh();
+  highlightSidebar();
 }
 
+/// Checks in EVERY Anya this wallet currently holds in one click --
+/// see api/checkin.js. Not gated on the currently-loaded token's own
+/// checked-in state, since other Anyas in the wallet may still be
+/// eligible even if this one already checked in today.
 async function handleCheckin() {
   el.checkinBtn.disabled = true;
   try {
     const res = await callWithSession("/api/checkin", {
       method: "POST",
-      body: JSON.stringify({ tokenId: currentTokenId }),
+      body: JSON.stringify({}),
     });
     const body = await res.json();
     if (!res.ok) {
-      showStatus(`Check-in failed: ${body.error}`, true);
+      if (body.error === "already_checked_in") {
+        showStatus("Every Anya in this wallet has already checked in today.", true);
+      } else {
+        showStatus(`Check-in failed: ${body.error}`, true);
+      }
       return;
     }
-    showStatus(`+${body.pointsAwarded} points from today's check-in.`);
+    const plural = body.checkedInCount === 1 ? "" : "s";
+    showStatus(`+${body.pointsAwarded} points -- checked in ${body.checkedInCount} Anya${plural}.`);
     await refresh();
   } finally {
     el.checkinBtn.disabled = false;
@@ -158,27 +251,62 @@ async function handleWheelSpin() {
   }
 }
 
-async function handleUpgrade(slot) {
-  const btn = document.querySelector(`.btn-upgrade[data-slot="${slot}"]`);
-  btn.disabled = true;
+/// Permanently unlocks one item FOR THE WHOLE WALLET, not just the
+/// token currently loaded -- if this wallet holds more than one Anya,
+/// every one of them can equip it. Buying never equips it automatically
+/// -- that keeps the two actions (spend points / change what's shown)
+/// clearly separate, and matches the server, which treats them as two
+/// different calls too.
+async function handleBuy(slot, tier) {
+  clearStatus();
   try {
-    const res = await callWithSession("/api/upgrade", {
+    const res = await callWithSession("/api/shop/buy", {
       method: "POST",
-      body: JSON.stringify({ tokenId: currentTokenId, slot }),
+      body: JSON.stringify({ slot, tier }),
     });
     const body = await res.json();
     if (!res.ok) {
-      showStatus(`Upgrade failed: ${body.error}`, true);
+      showStatus(`Purchase failed: ${body.error}`, true);
+      return;
+    }
+    showStatus(`Bought for ${body.cost} points. Click Equip to wear it.`);
+    await refresh();
+  } catch (err) {
+    showStatus(`Purchase failed: ${err.message}`, true);
+  }
+}
+
+/// Switches which owned item THIS token shows. Free, no points
+/// involved -- equipping is per-Anya even though ownership is shared
+/// wallet-wide. Can fail with "item_in_use" if a different Anya in
+/// this wallet currently has it on (see api/shop/equip.js).
+async function handleEquip(slot, tier) {
+  clearStatus();
+  try {
+    const res = await callWithSession("/api/shop/equip", {
+      method: "POST",
+      body: JSON.stringify({ tokenId: currentTokenId, slot, tier }),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      if (body.error === "item_in_use") {
+        showStatus(
+          `That item is currently worn by Anya #${body.equippedOnTokenId} -- equip something else there first to free it up.`,
+          true
+        );
+      } else {
+        showStatus(`Could not equip that: ${body.error}`, true);
+      }
       return;
     }
     const artNote =
       body.imageStatus === "pending"
         ? " Art for this exact look is still being generated -- it'll show up once it's ready."
         : "";
-    showStatus(`${slot} upgraded to tier ${body.newTier} for ${body.cost} points.${artNote}`);
+    showStatus(`Equipped.${artNote}`);
     await refresh();
-  } finally {
-    btn.disabled = false;
+  } catch (err) {
+    showStatus(`Could not equip that: ${err.message}`, true);
   }
 }
 
@@ -186,10 +314,6 @@ el.connectBtn.addEventListener("click", handleConnect);
 el.loadTokenBtn.addEventListener("click", handleLoadToken);
 el.checkinBtn.addEventListener("click", handleCheckin);
 el.wheelBtn.addEventListener("click", handleWheelSpin);
-
-document.querySelectorAll(".btn-upgrade").forEach((btn) => {
-  btn.addEventListener("click", () => handleUpgrade(btn.dataset.slot));
-});
 
 // If a session from an earlier visit is still valid (same tab session),
 // reflect the connected state immediately instead of showing "Connect".
@@ -199,5 +323,6 @@ document.querySelectorAll(".btn-upgrade").forEach((btn) => {
     el.connectBtn.hidden = true;
     el.walletLabel.hidden = false;
     el.walletLabel.textContent = `${wallet.slice(0, 6)}…${wallet.slice(-4)}`;
+    loadHoldings();
   }
 })();
