@@ -4,13 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Anya — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
 
 <header class="topbar">
   <div class="wrap topbar-inner">
-    <span class="brand">Anya</span>
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">⛏</span>
+      <span class="brand-name">Anya</span>
+    </div>
     <div id="wallet-area">
       <button id="connect-btn" class="btn btn-primary">Connect wallet</button>
       <span id="wallet-label" class="wallet-label" hidden></span>
@@ -20,7 +26,8 @@
 
 <main class="wrap">
 
-  <section id="token-picker" class="panel">
+  <section id="token-picker" class="panel panel-narrow">
+    <p class="eyebrow">Manage your Anya</p>
     <label for="token-id-input">Your token ID</label>
     <div class="row">
       <input id="token-id-input" type="number" min="1" placeholder="e.g. 42">
@@ -28,29 +35,35 @@
     </div>
     <p class="hint">
       Type the token ID you hold and connect your wallet to manage it.
-      (A future version of this page can list every token your wallet
-      owns automatically — see the note in README.md about wiring up
-      an NFT-indexing API for that.)
+      A future version of this page can list every token your wallet
+      owns automatically.
     </p>
   </section>
 
-  <section id="dashboard" class="panel" hidden>
+  <section id="dashboard" class="dashboard" hidden>
 
-    <div class="balance-row">
-      <div>
-        <span class="label">Points balance</span>
-        <span id="points-balance" class="balance">—</span>
+    <div class="hero-panel panel">
+      <div class="portrait-frame">
+        <img id="token-portrait" class="portrait-img" alt="Your Anya" src="">
+        <span id="token-id-badge" class="token-id-badge"></span>
       </div>
-      <div class="daily-actions">
-        <button id="checkin-btn" class="btn btn-primary">Daily check-in</button>
-        <button id="wheel-btn" class="btn btn-wheel">Spin the wheel</button>
+
+      <div class="hero-info">
+        <div class="balance-block">
+          <span class="label">Points balance</span>
+          <span id="points-balance" class="balance">—</span>
+        </div>
+        <div class="daily-actions">
+          <button id="checkin-btn" class="btn btn-primary">Daily check-in</button>
+          <button id="wheel-btn" class="btn btn-wheel">Spin the wheel</button>
+        </div>
+        <p id="status-message" class="status-message" hidden></p>
       </div>
     </div>
 
-    <p id="status-message" class="status-message" hidden></p>
-
     <div class="slots-grid">
       <article class="slot-card" data-slot="weapon">
+        <span class="slot-icon" aria-hidden="true">🪓</span>
         <h3>Weapon</h3>
         <p class="current-name">—</p>
         <p class="next-line">—</p>
@@ -58,6 +71,7 @@
       </article>
 
       <article class="slot-card" data-slot="outfit">
+        <span class="slot-icon" aria-hidden="true">🧥</span>
         <h3>Outfit</h3>
         <p class="current-name">—</p>
         <p class="next-line">—</p>
@@ -65,6 +79,7 @@
       </article>
 
       <article class="slot-card" data-slot="headwear">
+        <span class="slot-icon" aria-hidden="true">🎩</span>
         <h3>Headwear</h3>
         <p class="current-name">—</p>
         <p class="next-line">—</p>
@@ -72,6 +87,7 @@
       </article>
 
       <article class="slot-card" data-slot="companion">
+        <span class="slot-icon" aria-hidden="true">🐾</span>
         <h3>Companion</h3>
         <p class="current-name">—</p>
         <p class="next-line">—</p>
@@ -82,6 +98,10 @@
   </section>
 
 </main>
+
+<footer class="site-footer">
+  <div class="wrap">Anya — a living collection. Your Anya levels up with you.</div>
+</footer>
 
 <script src="js/wallet-auth.js"></script>
 <script src="js/dashboard.js"></script>
